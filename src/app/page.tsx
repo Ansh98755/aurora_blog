@@ -1,11 +1,13 @@
 import { HeroSection } from "@/components/home/HeroSection";
 import { ArticleGrid } from "@/components/home/ArticleGrid";
+import { ContinueReading } from "@/components/home/ContinueReading";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-slate-950 pb-16">
       <HeroSection />
       <ArticleGrid />
+      <ContinueReading />
       <section
         id="about"
         className="border-t border-white/10 bg-gradient-to-b from-slate-950 via-slate-950 to-black pb-16 pt-12"

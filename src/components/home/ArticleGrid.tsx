@@ -6,20 +6,6 @@ import { categories, Post, samplePosts } from "@/lib/posts";
 import Image from "next/image";
 import { useState } from "react";
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 18, scale: 0.98 },
-  visible: (index: number) => ({
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      delay: 0.08 + index * 0.04,
-      duration: 0.55,
-      ease: "easeOut",
-    },
-  }),
-};
-
 export function ArticleGrid() {
   const [activeCategory, setActiveCategory] = useState<(typeof categories)[number]>("All");
 
@@ -97,8 +83,13 @@ function ArticleCard({ post, index }: { post: Post; index: number }) {
   return (
     <motion.article
       className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-950/60 p-[1px] shadow-[0_18px_60px_rgba(15,23,42,0.9)]"
-      variants={cardVariants}
-      custom={index}
+      initial={{ opacity: 0, y: 18, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{
+        delay: 0.08 + index * 0.04,
+        duration: 0.55,
+        ease: "easeOut",
+      }}
       whileHover={{ y: -4 }}
     >
       <Link href={`/articles/${post.slug}`} className="flex flex-1 flex-col rounded-[1.05rem] bg-slate-950/90">

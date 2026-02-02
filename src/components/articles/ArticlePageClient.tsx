@@ -1,9 +1,10 @@
-"use client";
+ "use client";
 
 import { Post, samplePosts } from "@/lib/posts";
-import { motion } from "framer-motion";
+import { motion, useScroll } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
 type Props = {
   post: Post;
@@ -11,9 +12,43 @@ type Props = {
 
 export function ArticlePageClient({ post }: Props) {
   const paragraphs = post.content.split("\n\n");
+  const { scrollYProgress } = useScroll();
+  const [showOverview, setShowOverview] = useState(true);
+
+  // Track recently viewed posts in localStorage for "Continue reading"
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const key = "aurora-recent-posts";
+    const raw = window.localStorage.getItem(key);
+    const existing: { slug: string; viewedAt: number }[] = raw
+      ? JSON.parse(raw)
+      : [];
+
+    const next = [
+      { slug: post.slug, viewedAt: Date.now() },
+      ...existing.filter((item) => item.slug !== post.slug),
+    ].slice(0, 10);
+
+    window.localStorage.setItem(key, JSON.stringify(next));
+  }, [post.slug]);
+
+  const related = useMemo(
+    () =>
+      samplePosts
+        .filter((p) => p.id !== post.id && p.category === post.category)
+        .slice(0, 3),
+    [post.id, post.category]
+  );
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50">
+      {/* Scroll progress bar */}
+      <motion.div
+        className="fixed left-0 right-0 top-[53px] z-40 h-[2px] origin-left bg-gradient-to-r from-sky-400 via-emerald-400 to-fuchsia-400"
+        style={{ scaleX: scrollYProgress }}
+      />
+
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.32),transparent_60%)] blur-3xl" />
       </div>
@@ -84,12 +119,23 @@ export function ArticlePageClient({ post }: Props) {
               </section>
 
               <section className="space-y-3 rounded-xl border border-white/10 bg-slate-950/60 px-4 py-4">
-                <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-slate-400">
-                  Story overview
-                </p>
-                <p className="text-sm leading-relaxed text-slate-200 sm:text-[15px]">
-                  {post.summary}
-                </p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-slate-400">
+                    Story overview
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowOverview((v) => !v)}
+                    className="text-[11px] font-medium text-sky-300 hover:text-sky-200"
+                  >
+                    {showOverview ? "Hide TL;DR" : "Show TL;DR"}
+                  </button>
+                </div>
+                {showOverview && (
+                  <p className="text-sm leading-relaxed text-slate-200 sm:text-[15px]">
+                    {post.summary}
+                  </p>
+                )}
               </section>
 
               <section className="space-y-4">
@@ -159,6 +205,33 @@ export function ArticlePageClient({ post }: Props) {
               </div>
             </aside>
           </div>
+
+          {related.length > 0 && (
+            <div className="border-t border-white/10 bg-slate-950/80 px-5 py-6 sm:px-7 sm:py-7">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+                Continue the journey
+              </p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                {related.map((p) => (
+                  <Link
+                    key={p.id}
+                    href={`/articles/${p.slug}`}
+                    className="group rounded-xl border border-white/10 bg-slate-950/80 px-3 py-3 text-xs text-slate-200 transition-colors hover:border-sky-400/60 hover:bg-slate-900/80"
+                  >
+                    <p className="line-clamp-1 font-medium text-slate-50 group-hover:text-sky-200">
+                      {p.title}
+                    </p>
+                    <p className="mt-1 line-clamp-2 text-[11px] text-slate-400">
+                      {p.brief}
+                    </p>
+                    <p className="mt-1 text-[10px] text-slate-500">
+                      {p.category} • {p.readingTime}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </article>
       </div>
     </div>
